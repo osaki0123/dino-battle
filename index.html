@@ -589,7 +589,8 @@ h1{font-family:var(--display);font-size:clamp(18px,5vw,28px);margin:0;letter-spa
     if(!nm){$('scodeHelp').textContent='スタートがめんで「ランキングでの なまえ」を いれると ランキングに のるよ';return;}
     if(!window.FBNET||!FBNET.ok){$('scodeHelp').textContent='サーバーに つながっていないので ランキングに おくれなかった';return;}
     $('scodeHelp').textContent='ランキングに おくっています…';FBNET.submitScore(nm,score,wave,playerKind).then(ok=>{$('scodeHelp').textContent=ok?nm+' の '+score+'てんを ランキングに とうろくした！':'とうろく できなかった';}).catch(()=>{$('scodeHelp').textContent='とうろく できなかった';});}
-  function startCloud(){try{FBNET.watchTop(10,rows=>{RANKING=rows;renderRanking();});}catch(e){}showContinue();}
+  const LEGACY_SCORES=[{name:'将キングダム',score:195300,wave:40,kind:'trike',t:1793414341000},{name:'パパンゴ',score:102300,wave:25,kind:'trike',t:1793421867000},{name:'みなと',score:55900,wave:18,kind:'ankylo',t:1793416091000}];
+  function startCloud(){try{FBNET.watchTop(10,rows=>{RANKING=rows;renderRanking();});FBNET.seedScores(LEGACY_SCORES);}catch(e){}showContinue();}
   $('scode').addEventListener('click',()=>{const t=$('scode').textContent;if(!t)return;try{navigator.clipboard.writeText(t).then(()=>{$('scodeHelp').textContent='コピーした！';}).catch(()=>{});}catch(e){}});
   setTimeout(()=>{try{renderRanking();}catch(e){}},0);
   document.querySelectorAll('.wpick').forEach(b=>{b.addEventListener('pointerdown',e=>{e.stopPropagation();pickWeapon(b.dataset.w);SFX.point();});b.addEventListener('click',e=>{e.stopPropagation();pickWeapon(b.dataset.w);});});
