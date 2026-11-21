@@ -626,7 +626,7 @@ button,.hud{font-weight:800}
   // ---- sound engine: layered synth + noise with drive, tremolo growl, reverb; plus generative BGM (field / boss) ----
   const SFX=(()=>{let ac,master,verb,verbGain,noiseBuf,sfxBus,bgmBus,busF,busB,curve;
     let sndMode=0;try{sndMode=+(localStorage.getItem('dinoSound')||0)||0;}catch(e){}
-    function applyMode(){if(!ac)return;const t=ac.currentTime;sfxBus.gain.setTargetAtTime(sndMode===2?0:1,t,0.05);bgmBus.gain.setTargetAtTime(sndMode===0?1.7:0,t,0.2);}
+    function applyMode(){if(!ac)return;const t=ac.currentTime;sfxBus.gain.setTargetAtTime(sndMode===2?0:1,t,0.05);bgmBus.gain.setTargetAtTime(sndMode===0?1.15:0,t,0.2);}
     function ctx(){if(ac)return ac;ac=new (window.AudioContext||window.webkitAudioContext)();master=ac.createDynamicsCompressor();master.threshold.value=-16;master.ratio.value=5;master.attack.value=0.004;master.release.value=0.18;
       const lo=ac.createBiquadFilter();lo.type='lowshelf';lo.frequency.value=140;lo.gain.value=5;const hi=ac.createBiquadFilter();hi.type='highshelf';hi.frequency.value=5500;hi.gain.value=-4;
       const out=ac.createGain();out.gain.value=0.95;master.connect(lo).connect(hi).connect(out).connect(ac.destination);
@@ -721,10 +721,10 @@ button,.hud{font-weight:800}
   (()=>{const b=$('sndBtn');if(!b)return;b.textContent=SFX.modeLabel();b.addEventListener('click',e=>{e.stopPropagation();SFX.resume();SFX.cycleMode();b.textContent=SFX.modeLabel();SFX.point();});})();
   function sound(){}
 
-  function attack(){if(!running||downed||player.atkT>=0)return;player.atkT=0;weaponHit=true;try{if(weapon){weaponAttack();return;}SFX.bite();
+  function attack(){if(!running||downed||player.atkT>=0)return;player.atkT=0;weaponHit=true;try{if(weapon){weaponAttack();return;}let bit=false;
     const fwd=new THREE.Vector3(Math.sin(heading),0,Math.cos(heading));
     enemies.forEach(e=>{if(e.dying>=0)return;const to=e.g.position.clone().sub(player.g.position);const dist=to.length();
-      if(dist<stats.rng*player.g.scale.x&&to.normalize().dot(fwd)>0.4){damage(e,stats.atk*(atkBuff>0?2:1),to.multiplyScalar(1.2));chargeUlt(8);}});
+      if(dist<stats.rng*player.g.scale.x&&to.normalize().dot(fwd)>0.4){if(!e.shielded&&!bit){bit=true;SFX.bite();}damage(e,stats.atk*(atkBuff>0?2:1),to.multiplyScalar(1.2));chargeUlt(8);}});
   }finally{weaponHit=false;}}
   let weaponHit=false,blockToastT=0;
   function giveShield(e){e.shielded=true;const g=new THREE.Group();const s=new THREE.Mesh(new THREE.BoxGeometry(1.1,1.4,0.16),new THREE.MeshStandardMaterial({color:0x6b7280,metalness:.5,roughness:.4,flatShading:true}));g.add(s);const r=new THREE.Mesh(new THREE.BoxGeometry(0.75,1.05,0.18),new THREE.MeshStandardMaterial({color:0x9ca3af,flatShading:true}));g.add(r);const em=new THREE.Mesh(new THREE.OctahedronGeometry(0.22,0),new THREE.MeshStandardMaterial({color:0xff3b3b,emissive:0x880000,flatShading:true}));em.position.z=0.14;g.add(em);g.traverse(o=>{if(o.isMesh)o.castShadow=true;});g.position.set(-1.0,-0.1,1.1);g.rotation.y=-0.35;e.root.add(g);e.shieldMesh=g;}
