@@ -673,7 +673,14 @@ button,.hud{font-weight:800}
     S.wave=safe(()=>{thump(100,0.45,0.3,{rev:0.4});[[147,0],[220,0],[294,0],[220,0.22],[330,0.22],[440,0.22]].forEach(([p,dl])=>tone({p0:p,types:['sawtooth','sawtooth','square'],detune:10,a:0.03,d:dl?0.7:0.25,vol:0.085,f0:700,f1:2200,delay:dl,rev:0.6}));});
     S.over=safe(()=>{[392,349,294,220].forEach((p,i)=>{tone({p0:p,p1:p*0.97,types:['triangle','sawtooth'],detune:10,a:0.03,d:0.7,vol:0.13,delay:i*0.32,f0:1500,f1:600,rev:0.8});tone({p0:p/2,types:['sawtooth'],a:0.03,d:0.7,vol:0.08,delay:i*0.32,f0:500,rev:0.6});});thump(80,0.5,0.8,{delay:0.96,rev:0.6});});
     S.bossIn=safe(()=>{thump(75,0.7,0.9,{rev:0.7});noise({ftype:'lowpass',f0:400,f1:70,d:1.2,vol:0.5,rev:0.8});growl(130,50,1.6,0.3,{delay:0.25,trem:26,trem1:14});[73.4,110,146.8].forEach(p=>tone({p0:p,types:['sawtooth','sawtooth'],detune:14,a:0.3,d:1.6,vol:0.12,f0:300,f1:1200,rev:0.7}));});
-    S.resume=safe(()=>{const c=ctx();if(c.state==='suspended')c.resume();});
+    S.resume=safe(()=>{const c=ctx();if(c.state==='suspended')c.resume();Object.keys(raw).forEach(decode);});
+    // recorded samples (snd/*.mp3) replace the synthesized effects once loaded; the synth stays as fallback
+    const SMP={bite:[0.85,0.07],hit:[0.7,0.08],hurt:[0.9,0.05],kill:[0.8,0.06],roar:[0.9,0.04,0.25],stomp:[1,0.06,0.2],ult:[1,0.03,0.2],bossIn:[1,0,0.35,'boss'],tail:[0.85,0.06],dash:[0.6,0.05],shield:[0.7,0.04],item:[0.6,0],evolve:[0.85,0,0.2],point:[0.5,0]};
+    const raw={},bufs={};Object.keys(SMP).forEach(n=>{const file=SMP[n][3]||n;try{fetch('snd/'+file+'.mp3').then(r=>r.ok?r.arrayBuffer():null).then(ab=>{if(ab){raw[n]=ab;if(ac)decode(n);}}).catch(()=>{});}catch(e){}});
+    function decode(n){const ab=raw[n];if(!ab||!ac)return;delete raw[n];try{ac.decodeAudioData(ab,b=>{bufs[n]=b;},()=>{});}catch(e){}}
+    function playSmp(n){const c=ctx();Object.keys(raw).forEach(decode);const b=bufs[n];if(!b)return false;const d=SMP[n];const src=c.createBufferSource();src.buffer=b;src.playbackRate.value=1+(Math.random()*2-1)*(d[1]||0);
+      const g=c.createGain();g.gain.value=d[0];src.connect(g).connect(sfxBus);if(d[2]){const s=c.createGain();s.gain.value=d[2];g.connect(s).connect(verb);}src.start();return true;}
+    Object.keys(SMP).forEach(n=>{const syn=S[n];S[n]=safe(()=>{if(!playSmp(n))syn();});});
 
     // ---- BGM: two looping arrangements scheduled a little ahead of the clock ----
     const N={D2:73.42,F2:87.31,G2:98,A2:110,Bb2:116.54,C3:130.81,D3:146.83,E3:164.81,F3:174.61,G3:196,A3:220,Bb3:233.08,C4:261.63,Cs4:277.18,D4:293.66,E4:329.63,F4:349.23,G4:392,A4:440,C5:523.25,D5:587.33};
