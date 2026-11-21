@@ -626,7 +626,7 @@ button,.hud{font-weight:800}
   // ---- sound engine: layered synth + noise with drive, tremolo growl, reverb; plus generative BGM (field / boss) ----
   const SFX=(()=>{let ac,master,verb,verbGain,noiseBuf,sfxBus,bgmBus,busF,busB,curve;
     let sndMode=0;try{sndMode=+(localStorage.getItem('dinoSound')||0)||0;}catch(e){}
-    function applyMode(){if(!ac)return;const t=ac.currentTime;sfxBus.gain.setTargetAtTime(sndMode===2?0:1,t,0.05);bgmBus.gain.setTargetAtTime(sndMode===0?0.5:0,t,0.2);}
+    function applyMode(){if(!ac)return;const t=ac.currentTime;sfxBus.gain.setTargetAtTime(sndMode===2?0:1,t,0.05);bgmBus.gain.setTargetAtTime(sndMode===0?1.7:0,t,0.2);}
     function ctx(){if(ac)return ac;ac=new (window.AudioContext||window.webkitAudioContext)();master=ac.createDynamicsCompressor();master.threshold.value=-16;master.ratio.value=5;master.attack.value=0.004;master.release.value=0.18;
       const lo=ac.createBiquadFilter();lo.type='lowshelf';lo.frequency.value=140;lo.gain.value=5;const hi=ac.createBiquadFilter();hi.type='highshelf';hi.frequency.value=5500;hi.gain.value=-4;
       const out=ac.createGain();out.gain.value=0.95;master.connect(lo).connect(hi).connect(out).connect(ac.destination);
@@ -685,17 +685,17 @@ button,.hud{font-weight:800}
     let mode='off',step=0,nextT=0,rumble=null;
     function fieldStep(s,t,sd){const bar=FIELD.bars[(s>>4)%4],k=s%16,o={out:busF};
       if(k===0||k===6||k===10)tone({at:t,p0:118,p1:52,types:['sine'],a:0.004,d:0.24,vol:k?0.2:0.3,out:busF,rev:0.3});                       // hand drum, low
-      if(k===3||k===8||k===13||k===14)tone({at:t,p0:230,p1:150,types:['sine','triangle'],a:0.003,d:0.11,vol:0.1,out:busF,rev:0.3});          // hand drum, high
+      if(k===3||k===8||k===13||k===14)tone({at:t,p0:330,p1:210,types:['sine','triangle'],a:0.003,d:0.11,vol:0.14,out:busF,rev:0.3});          // hand drum, high
       if(k%2===0)noise({at:t,ftype:'highpass',f0:6000,d:0.035,vol:k%4===2?0.05:0.025,out:busF});                                              // shaker
       if(k===0||k===3||k===6||k===10||k===12)tone({at:t,p0:bar.r*(k===12?1.5:1),types:['triangle','sawtooth'],d:0.26,vol:0.16,f0:500,f1:180,out:busF}); // bass
-      if(k===0)bar.ch.forEach(p=>tone({at:t,p0:p,types:['sawtooth','sawtooth'],detune:12,a:sd*4,d:sd*13,vol:0.03,f0:500,f1:1100,out:busF,rev:0.8})); // pad
-      const m=FIELD.mel[s%64];if(m){tone({at:t,p0:m,types:['sine','triangle'],a:0.004,d:0.32,vol:0.085,out:busF,rev:0.7});tone({at:t,p0:m*4,types:['sine'],a:0.002,d:0.05,vol:0.02,out:busF});} // marimba
+      if(k===0)bar.ch.forEach(p=>tone({at:t,p0:p,types:['sawtooth','sawtooth'],detune:12,a:sd*4,d:sd*13,vol:0.055,f0:700,f1:1500,out:busF,rev:0.8})); // pad
+      const m=FIELD.mel[s%64];if(m){tone({at:t,p0:m,types:['sine','triangle'],a:0.004,d:0.32,vol:0.14,out:busF,rev:0.7});tone({at:t,p0:m*4,types:['sine'],a:0.002,d:0.05,vol:0.02,out:busF});} // marimba
     }
     function bossStep(s,t,sd){const bi=(s>>4)%4,bar=BOSS.bars[bi],k=s%16;
       if(k===0||k===3||k===6||k===8||k===11||k===14){const acc=(k===0||k===8);tone({at:t,p0:acc?95:120,p1:acc?38:55,types:['sine'],a:0.004,d:acc?0.55:0.28,vol:acc?0.5:0.26,out:busB,rev:0.5});noise({at:t,ftype:'lowpass',f0:acc?500:800,f1:90,d:acc?0.4:0.18,vol:acc?0.3:0.14,out:busB,rev:0.6});} // war drums
       if(k===12||k===13)noise({at:t,f0:1400,f1:700,d:0.09,vol:0.1,q:0.8,out:busB,rev:0.4});                                                    // rim roll
       if(k%2===0)tone({at:t,p0:bar.r,types:['sawtooth','square'],detune:8,a:0.01,d:sd*1.7,vol:k%4?0.12:0.17,f0:420,f1:150,drive:1.6,out:busB}); // pulsing low strings
-      if(k===0){bar.ch.forEach(p=>tone({at:t,p0:p,types:['sawtooth','sawtooth','sawtooth'],detune:16,a:sd*2,d:sd*13.5,vol:0.05,f0:350,f1:1500,out:busB,rev:0.8}));   // brass swell
+      if(k===0){bar.ch.forEach(p=>tone({at:t,p0:p,types:['sawtooth','sawtooth','sawtooth'],detune:16,a:sd*2,d:sd*13.5,vol:0.075,f0:500,f1:1900,out:busB,rev:0.8}));   // brass swell
         tone({at:t,p0:bar.r/2*2,types:['sawtooth'],a:sd*2,d:sd*13,vol:0.1,f0:200,f1:500,out:busB,rev:0.5});
         if(bi===0)[N.D3*2.0,N.D3*2.76,N.D3*5.4].forEach((p,i)=>tone({at:t,p0:p,types:['sine'],a:0.004,d:2.6-i*0.6,vol:0.05-i*0.012,out:busB,rev:0.9}));}               // tolling bell
       const m=BOSS.mel[s%32];if(m)[m,m/2].forEach((p,i)=>tone({at:t,p0:p,types:['sawtooth','sawtooth'],detune:14,a:0.12,d:sd*5.5,vol:i?0.06:0.05,f0:700,f1:1600,vib:5,out:busB,rev:0.8})); // high strings line
